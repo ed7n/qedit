@@ -1,0 +1,62 @@
+QEdit: Changes
+
+—
+
+——Development F, 08/31/2021.
+- Additive PREGAP-INDEX conversion.
+- Checker no longer checks for quotations.
+- Custom statement support.
+- Erased prepending "--" from actions.
+- Fixed parsing of empty files.
+- Fixed `check` description.
+- REMs after INDEX but before TRACK will be placed before both POSTGAP and FILE.
+- Removed `quote`.
+- Renamed `adjust-time` to `shift-times`.
+- String arguments are always quoted.
+- Suggesting of remedies to supported caught problems.
+- Word-detecting parser.
+- Actions:
+  - no-session-performer
+  - no-session-songwriter
+  - no-session-title
+  - no-track-performer
+  - no-track-songwriter
+  - no-track-title
+- shift-times: `0` uses the absolute-first INDEX as the frame offset.
+
+——Development E, 09/23/2020.
+- Fixed parsing of empty REMs.
+- Fixed `--no-songwriter`.
+- `--no-title` action.
+
+——Development D, 04/18/2020.
+- Checker complies with most of the original specifications.
+- REM support.
+- Renamed `--verify` to `--check`.
+- Separated action words with "-".
+- Actions:
+  - --no-catalog
+  - --no-cdtext
+  - --no-isrc
+  - --no-performer
+  - --no-postgap
+  - --no-pregap
+  - --no-rems
+  - --no-songwriter
+  - --quote
+  - --swap-authors
+
+——Development C, 06/13/2019.
+- INDEX support.
+- Multi-FILE support.
+- Prepended "--" to actions.
+- Removed directory recursion.
+- Writing is no longer automatic.
+- Actions: --adjusttime, --seteol, --verify, --write.
+
+——Development B, 03/27/2019.
+- CDTEXTFILE statement support.
+- Actions: pregaptoindex00, index00topregap, print.
+
+——Development A, 03/26/2019.
+- Initial release.

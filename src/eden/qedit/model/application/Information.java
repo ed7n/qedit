@@ -1,59 +1,42 @@
 package eden.qedit.model.application;
 
-import static eden.common.shared.Constants.STRING_CAPACITY;
+import static eden.common.shared.Constants.EOL;
+import static eden.common.shared.Constants.SPACE;
 
 /**
- * The {@code Information} class consists of definitions that describe this
- * application.
+ * Consists of application descriptions.
  *
  * @author Brendon
- * @version devE
  */
 public final class Information {
-
-//~~CLASS CONSTANTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   /** Application name. */
   public static final String NAME = "QEdit";
 
   /** Application version. */
-  public static final String VER = "devE";
+  public static final String VER = "devF";
 
   /** Application version, long version. */
-  public static final String VERSION = "Development E";
+  public static final String VERSION = "Development F";
 
   /** Application release date. */
-  public static final String DATE = "09/23/2020";
+  public static final String DATE = "08/31/2021";
 
   /** Application description. */
   public static final String DESCRIPTION
-      = "A cuesheet editor. Still under construction.";
+      = "A cuesheet editor.";
 
   /** Application landing URL. */
   public static final String URL
-      = "https://BrendonIrwan.github.com/QEdit";
-
-//~~CONSTRUCTORS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      = "https://ed7n.github.com/qedit";
 
   /** To prevent instantiations of this class. */
   private Information() {
   }
 
-//~~CLASS METHODS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
   /** Returns the header for this application. */
   public static String getHeader() {
-    StringBuilder builder = new StringBuilder(STRING_CAPACITY);
-    builder.append(NAME);
-    builder.append(" ");
-    builder.append(VER);
-    builder.append(" by Brendon, ");
-    builder.append(DATE);
-    builder.append(".");
-    builder.append(System.lineSeparator());
-    builder.append("--");
-    builder.append(DESCRIPTION);
-    builder.append(System.lineSeparator());
-    return builder.toString();
+    return NAME + SPACE + VER + SPACE
+        + "by Brendon," + SPACE + DATE + "." + EOL + "——" + DESCRIPTION + EOL;
   }
 }

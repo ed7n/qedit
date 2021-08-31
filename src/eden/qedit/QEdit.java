@@ -1,189 +1,258 @@
 package eden.qedit;
 
-import eden.common.io.Modal;
-import eden.common.model.cd.CueSheet;
-import eden.common.util.cuesheet.AdjustTime;
-import eden.common.util.cuesheet.Check;
-import eden.common.util.cuesheet.CueSheetFilter;
-import eden.common.util.cuesheet.CueSheets;
-import eden.common.util.cuesheet.IndexToPregap;
-import eden.common.util.cuesheet.NoCDText;
-import eden.common.util.cuesheet.NoCatalog;
-import eden.common.util.cuesheet.NoISRC;
-import eden.common.util.cuesheet.NoPerformer;
-import eden.common.util.cuesheet.NoPostgap;
-import eden.common.util.cuesheet.NoPregap;
-import eden.common.util.cuesheet.NoRems;
-import eden.common.util.cuesheet.NoSongwriter;
-import eden.common.util.cuesheet.NoTitle;
-import eden.common.util.cuesheet.PregapToIndex;
-import eden.common.util.cuesheet.Print;
-import eden.common.util.cuesheet.Quote;
-import eden.common.util.cuesheet.SetEOL;
-import eden.common.util.cuesheet.SwapAuthors;
-import eden.common.util.cuesheet.Write;
-import eden.qedit.model.application.Help;
-import eden.qedit.model.application.Information;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-
+import static eden.common.shared.Constants.EOL;
 import static eden.common.shared.Constants.EXIT_FAILURE;
 import static eden.common.shared.Constants.EXIT_SUCCESS;
+import static eden.common.shared.Constants.NUL_INT;
 import static eden.common.shared.Constants.STDOUT;
+
+import eden.common.excep.EDENException;
+import eden.common.excep.EDENRuntimeException;
+import eden.common.io.Modal;
+import eden.common.model.cd.CueSheet;
+import eden.common.model.plaintext.LineEnding;
+import eden.common.util.CueSheets;
+import eden.common.util.Strings;
+import eden.qedit.action.Check;
+import eden.qedit.action.CueSheetAction;
+import eden.qedit.action.IndexToPregap;
+import eden.qedit.action.NoCDText;
+import eden.qedit.action.NoCatalog;
+import eden.qedit.action.NoISRC;
+import eden.qedit.action.NoPerformer;
+import eden.qedit.action.NoPostgap;
+import eden.qedit.action.NoPregap;
+import eden.qedit.action.NoRem;
+import eden.qedit.action.NoSongwriter;
+import eden.qedit.action.NoTitle;
+import eden.qedit.action.PregapToIndex;
+import eden.qedit.action.Print;
+import eden.qedit.action.SetEOL;
+import eden.qedit.action.ShiftTimes;
+import eden.qedit.action.SwapAuthors;
+import eden.qedit.action.Write;
+import eden.qedit.model.application.Help;
+import eden.qedit.model.application.Information;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 /**
  * This class serves as the entry point to this application. It consists of the
  * main method from which the application initializes into an instance.
  *
  * @author Brendon
- * @version devD
  */
 public class QEdit {
 
-//~~OBJECT CONSTANTS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /** Whether to print stack traces of caught throwables. */
+  public static final boolean DEBUG = false;
 
-  private final Modal out = new Modal("QEdit");
-  private final Modal err = new Modal("QEdit");
-  private final String[] args;
-  private final List<CueSheetFilter> filters = new LinkedList<>();
+  private static final Pattern HELP
+      = Pattern.compile("^(-){1,2}[Hh]([Ee][Ll][Pp])?$");
 
-//~~OBJECT FIELDS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /**
+   * The main method is the entry point to this application.
+   *
+   * @param args Command-line arguments to be passed on execution.
+   */
+  public static void main(String[] args) {
+    System.exit(new QEdit(args).run());
+  }
 
+  /** Program modal. */
+  private final Modal modal = new Modal(Information.NAME);
+
+  /** Program arguments. */
+  private final Deque<String> arguments;
+
+  /** Actions. */
+  private final List<CueSheetAction> actions = new LinkedList<>();
+
+  /** Working cuesheet. */
   private CueSheet sheet;
 
-//~~CONSTRUCTORS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /** Operation mode. */
+  private Mode mode = Mode.PARSE;
 
+  /** Makes an instance with the given arguments. */
   private QEdit(String[] args) {
-    this.args = args;
+    this.arguments = new LinkedList<>(Arrays.asList(args));
   }
 
-//~~OBJECT METHODS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+  /** Runs itself. */
   private int run() {
-    int exitCode = parseArguments();
-    if (exitCode != EXIT_SUCCESS)
-      return exitCode;
-    if (exitCode == Integer.MIN_VALUE)
-      return EXIT_SUCCESS;
-    try {
-      this.sheet
-          = CueSheets.parseFile(new File(this.args[this.args.length - 1]));
-    } catch (IOException e) {
-      this.err.println(e.getMessage(), Modal.ERROR);
-      return EXIT_FAILURE;
-    }
-    return operateFilters();
+    int exitCode = NUL_INT;
+    do
+      switch (this.mode) {
+        case PARSE:
+          exitCode = parse();
+          if (exitCode == hashCode())
+            return EXIT_SUCCESS;
+          this.mode = Mode.READ;
+          break;
+        case READ:
+          exitCode = read();
+          this.mode = Mode.ACT;
+          break;
+        case ACT:
+          exitCode = act();
+          this.mode = Mode.DONE;
+          break;
+        case DONE:
+          return exitCode;
+      }
+    while (exitCode == EXIT_SUCCESS);
+    return exitCode;
   }
 
-  private int parseArguments() {
-    if (this.args.length == 0)
+  /** Prints its help message. */
+  private int help() {
+    STDOUT.println(
+        Information.getHeader() + EOL + Help.USAGE + EOL + Help.EXPLANATION);
+    return hashCode();
+  }
+
+  /** Prints the stack trace of the given throwable. */
+  private void printThrowable(Throwable throwable) {
+    printThrowable(null, throwable);
+  }
+
+  /**
+   * Prints the stack trace of the given throwable headered by the given header.
+   */
+  private void printThrowable(String header, Throwable throwable) {
+    if (!Strings.isNullOrEmpty(header))
+      this.modal.print(header + ":\n  ", Modal.ERROR);
+    if (DEBUG)
+      throwable.printStackTrace(this.modal.getPrintStream());
+    else
+      this.modal.println(throwable.toString(), Modal.ERROR);
+    if (throwable instanceof EDENRuntimeException)
+      this.modal.println(((EDENRuntimeException) throwable).getRemedy());
+    else if (throwable instanceof EDENException)
+      this.modal.println(((EDENException) throwable).getRemedy());
+  }
+
+  private int parse() {
+    if (this.arguments.isEmpty())
       return help();
-    CueSheetFilter filter;
-    for (int i = 0; i < this.args.length; i += filter.getParamCount()) {
-      String arg = this.args[i++];
-      try {
-        if (arg.equalsIgnoreCase("--adjust-time")
-            || arg.equalsIgnoreCase("--adj-time"))
-          filter = new AdjustTime(this.args[i]);
-        else if (arg.equalsIgnoreCase("--check"))
-          filter = new Check(this.args[this.args.length - 1]);
-        else if (arg.equalsIgnoreCase("--index-to-pregap"))
-          filter = new IndexToPregap();
-        else if (arg.equalsIgnoreCase("--pregap-to-index"))
-          filter = new PregapToIndex();
-        /*
-        else if (arg.equalsIgnoreCase("--magic"))
-          filter = new Magic(this.args[this.args.length - 1]);
-        */
-        else if (arg.equalsIgnoreCase("--no-catalog"))
-          filter = new NoCatalog();
-        else if (arg.equalsIgnoreCase("--no-cdtext"))
-          filter = new NoCDText();
-        else if (arg.equalsIgnoreCase("--no-isrc"))
-          filter = new NoISRC();
-        else if (arg.equalsIgnoreCase("--no-performer"))
-          filter = new NoPerformer();
-        else if (arg.equalsIgnoreCase("--no-postgap"))
-          filter = new NoPostgap();
-        else if (arg.equalsIgnoreCase("--no-pregap"))
-          filter = new NoPregap();
-        else if (arg.equalsIgnoreCase("--no-rems"))
-          filter = new NoRems();
-        else if (arg.equalsIgnoreCase("--no-songwriter"))
-          filter = new NoSongwriter();
-        else if (arg.equalsIgnoreCase("--no-title"))
-          filter = new NoTitle();
-        else if (arg.equalsIgnoreCase("--print"))
-          filter = new Print();
-        else if (arg.equalsIgnoreCase("--quote"))
-          filter = new Quote(this.args[i]);
-        else if (arg.equalsIgnoreCase("--set-eol"))
-          filter = new SetEOL(this.args[i]);
-        else if (arg.equalsIgnoreCase("--swap-authors"))
-          filter = new SwapAuthors();
-        else if (arg.equalsIgnoreCase("--write"))
-          filter = new Write(this.args[i]);
-        else if (arg.equalsIgnoreCase("--help") || arg.equalsIgnoreCase("-h"))
+    CueSheetAction action;
+    String argument = null, option = null;
+    try {
+      while (this.arguments.size() > 1) {
+        argument = this.arguments.removeFirst();
+        if (argument.equalsIgnoreCase(Check.KEY))
+          action = new Check();
+        else if (argument.equalsIgnoreCase(IndexToPregap.KEY))
+          action = new IndexToPregap();
+        else if (argument.equalsIgnoreCase(NoCatalog.KEY))
+          action = new NoCatalog();
+        else if (argument.equalsIgnoreCase(NoCDText.KEY))
+          action = new NoCDText();
+        else if (argument.equalsIgnoreCase(NoISRC.KEY))
+          action = new NoISRC();
+        else if (argument.equalsIgnoreCase(NoPerformer.KEY))
+          action = new NoPerformer(CueSheetAction.Mode.ALL);
+        else if (argument.equalsIgnoreCase(NoPostgap.KEY))
+          action = new NoPostgap();
+        else if (argument.equalsIgnoreCase(NoPregap.KEY))
+          action = new NoPregap();
+        else if (argument.equalsIgnoreCase(NoRem.KEY))
+          action = new NoRem();
+        else if (argument.equalsIgnoreCase(NoPerformer.KEY_SESSION))
+          action = new NoPerformer(CueSheetAction.Mode.SESSION);
+        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_SESSION))
+          action = new NoSongwriter(CueSheetAction.Mode.SESSION);
+        else if (argument.equalsIgnoreCase(NoTitle.KEY_SESSION))
+          action = new NoTitle(CueSheetAction.Mode.SESSION);
+        else if (argument.equalsIgnoreCase(NoSongwriter.KEY))
+          action = new NoSongwriter(CueSheetAction.Mode.ALL);
+        else if (argument.equalsIgnoreCase(NoTitle.KEY))
+          action = new NoTitle(CueSheetAction.Mode.ALL);
+        else if (argument.equalsIgnoreCase(NoPerformer.KEY_TRACK))
+          action = new NoPerformer(CueSheetAction.Mode.TRACK);
+        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_TRACK))
+          action = new NoSongwriter(CueSheetAction.Mode.TRACK);
+        else if (argument.equalsIgnoreCase(NoTitle.KEY_TRACK))
+          action = new NoTitle(CueSheetAction.Mode.TRACK);
+        else if (argument.equalsIgnoreCase(PregapToIndex.KEY))
+          action = new PregapToIndex();
+        else if (argument.equalsIgnoreCase(Print.KEY))
+          action = new Print();
+        else if (argument.equalsIgnoreCase(SetEOL.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetEOL(LineEnding.parseName(option));
+        } else if (argument.equalsIgnoreCase(ShiftTimes.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new ShiftTimes(Integer.parseInt(option));
+        } else if (argument.equalsIgnoreCase(SwapAuthors.KEY))
+          action = new SwapAuthors();
+        else if (argument.equalsIgnoreCase(Write.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new Write(Paths.get(option));
+        } else if (HELP.matcher(argument).matches())
           return help();
-        else if (arg.equals("--") || i == this.args.length)
-          return EXIT_SUCCESS;
+        else if (argument.equalsIgnoreCase("--"))
+          break;
         else {
-          this.err.println("Malformed action: " + arg, Modal.ERROR);
+          this.modal.println("Invalid action: " + argument, Modal.ERROR);
           return EXIT_FAILURE;
         }
-      } catch (IndexOutOfBoundsException e) {
-        this.err.println("Insufficient options for action " + arg, Modal.ERROR);
-        return EXIT_FAILURE;
-      } catch (IllegalArgumentException e) {
-        this.err.println(
-            "Malformed option for action " + arg + ": " + e.getMessage(),
-            Modal.ERROR);
+        this.actions.add(action);
+      }
+      if (this.arguments.isEmpty()) {
+        this.modal.println("No input file.", Modal.ERROR);
         return EXIT_FAILURE;
       }
-      this.filters.add(filter);
+      return HELP.matcher(this.arguments.getFirst()).matches()
+          ? help() : EXIT_SUCCESS;
+    } catch (NoSuchElementException exception) {
+      this.modal.println(
+          "Insufficient options for `" + argument + "`.", Modal.ERROR);
+      if (DEBUG)
+        printThrowable(exception);
+    } catch (IllegalArgumentException | NullPointerException exception) {
+      this.modal.println(
+          "Invalid option for `" + argument + "`: " + option, Modal.ERROR);
+      if (DEBUG)
+        printThrowable(exception);
     }
-    this.err.println("No input file specified.", Modal.ERROR);
     return EXIT_FAILURE;
   }
 
-  private int operateFilters() {
-    for (CueSheetFilter filter : this.filters)
-      try {
-      if (!filter.filter(this.sheet)) {
-        this.err.println(
-            "Action " + filter.getClass().getSimpleName() + " failed.",
-            Modal.ERROR);
-        return EXIT_FAILURE;
-      }
-    } catch (Throwable e) {
-      this.err.println(
-          "Error in action " + filter.getClass().getSimpleName() + ": "
-          + e.getMessage(),
-          Modal.ERROR);
+  private int read() {
+    try {
+      this.sheet = CueSheets.parse(new File(this.arguments.getLast()));
+    } catch (Throwable throwable) {
+      printThrowable("CueSheetParser threw", throwable);
       return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
   }
 
-  private int help() {
-    STDOUT.println(
-        Information.getHeader()
-        + System.lineSeparator() + Help.USAGE
-        + System.lineSeparator() + Help.EXPLANATION);
-    return Integer.MIN_VALUE;
+  private int act() {
+    for (CueSheetAction action : this.actions)
+      try {
+      if (!action.run(this.sheet)) {
+        this.modal.println(
+            "`" + action.toString() + "` returned failure.", Modal.ERROR);
+        return EXIT_FAILURE;
+      }
+    } catch (Throwable throwable) {
+      printThrowable("`" + action.toString() + "` threw", throwable);
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
   }
 
-//~~APPLICATION ENTRY POINT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  /**
-   * The main method is the entry point to this application.
-   *
-   * @param args command-line arguments to be passed on execution.
-   */
-  public static void main(String[] args) {
-    System.exit(new QEdit(args).run());
+  /** Operation modes. */
+  private enum Mode {
+    PARSE, READ, ACT, DONE;
   }
 }
