@@ -2,6 +2,9 @@ QEdit: Changes
 
 —
 
+——Development G, 09/10/2021.
+- Fixed renaming of `no-rems` to `no-rem`.
+
 ——Development F, 08/31/2021.
 - Additive PREGAP-INDEX conversion.
 - Checker no longer checks for quotations.

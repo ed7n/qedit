@@ -10,7 +10,7 @@ import eden.common.model.cd.CueSheet;
 public class NoRem implements CueSheetAction {
 
   /** Key. */
-  public static final String KEY = "no-rems";
+  public static final String KEY = "no-rem";
 
   /** {@inheritDoc} */
   @Override
