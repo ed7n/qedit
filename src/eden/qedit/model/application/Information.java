@@ -14,13 +14,13 @@ public final class Information {
   public static final String NAME = "QEdit";
 
   /** Application version. */
-  public static final String VER = "devG";
+  public static final String VER = "devH";
 
   /** Application version, long version. */
-  public static final String VERSION = "Development G";
+  public static final String VERSION = "Development H";
 
   /** Application release date. */
-  public static final String DATE = "09/10/2021";
+  public static final String DATE = "10/20/2021";
 
   /** Application description. */
   public static final String DESCRIPTION
@@ -36,7 +36,7 @@ public final class Information {
 
   /** Returns the header for this application. */
   public static String getHeader() {
-    return NAME + SPACE + VER + SPACE
-        + "by Brendon," + SPACE + DATE + "." + EOL + "——" + DESCRIPTION + EOL;
+    return NAME + SPACE + VER + SPACE + "by Brendon,"
+        + SPACE + DATE + "." + EOL + "——" + DESCRIPTION + SPACE + URL + EOL;
   }
 }

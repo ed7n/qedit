@@ -2,6 +2,9 @@ QEdit: Changes
 
 —
 
+——Development H, 10/20/2021.
+- Print application landing URL in the header.
+
 ——Development G, 09/10/2021.
 - Fixed renaming of `no-rems` to `no-rem`.
 
