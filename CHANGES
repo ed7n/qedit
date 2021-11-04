@@ -2,6 +2,10 @@ QEdit: Changes
 
 —
 
+——Development I, 11/03/2021.
+- Allow non-one starting track number.
+- Minor parser refactors.
+
 ——Development H, 10/20/2021.
 - Print application landing URL in the header.
 

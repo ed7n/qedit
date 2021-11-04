@@ -34,6 +34,8 @@ import eden.qedit.action.Write;
 import eden.qedit.model.application.Help;
 import eden.qedit.model.application.Information;
 import java.io.File;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Deque;
@@ -50,7 +52,7 @@ import java.util.regex.Pattern;
  */
 public class QEdit {
 
-  /** Whether to print stack traces of caught throwables. */
+  /** Whether to print stack traces of caught exceptions. */
   public static final boolean DEBUG = false;
 
   private static final Pattern HELP
@@ -118,25 +120,27 @@ public class QEdit {
     return hashCode();
   }
 
-  /** Prints the stack trace of the given throwable. */
-  private void printThrowable(Throwable throwable) {
-    printThrowable(null, throwable);
+  /** Prints the stack trace of the given exception. */
+  private void printException(Exception exception) {
+    printException(null, exception);
   }
 
   /**
-   * Prints the stack trace of the given throwable headered by the given header.
+   * Prints the stack trace of the given exception headered by the given header.
    */
-  private void printThrowable(String header, Throwable throwable) {
+  private void printException(String header, Exception exception) {
     if (!Strings.isNullOrEmpty(header))
       this.modal.print(header + ":\n  ", Modal.ERROR);
+    if (exception instanceof EDENRuntimeException) {
+      this.modal.println(exception.getMessage(), Modal.ERROR);
+      this.modal.println(((EDENRuntimeException) exception).getRemedy());
+    } else if (exception instanceof EDENException) {
+      this.modal.println(exception.getMessage(), Modal.ERROR);
+      this.modal.println(((EDENException) exception).getRemedy());
+    } else
+      this.modal.println(exception.toString(), Modal.ERROR);
     if (DEBUG)
-      throwable.printStackTrace(this.modal.getPrintStream());
-    else
-      this.modal.println(throwable.toString(), Modal.ERROR);
-    if (throwable instanceof EDENRuntimeException)
-      this.modal.println(((EDENRuntimeException) throwable).getRemedy());
-    else if (throwable instanceof EDENException)
-      this.modal.println(((EDENException) throwable).getRemedy());
+      exception.printStackTrace(this.modal.getPrintStream());
   }
 
   private int parse() {
@@ -216,36 +220,40 @@ public class QEdit {
       this.modal.println(
           "Insufficient options for `" + argument + "`.", Modal.ERROR);
       if (DEBUG)
-        printThrowable(exception);
+        QEdit.this.printException(exception);
     } catch (IllegalArgumentException | NullPointerException exception) {
       this.modal.println(
           "Invalid option for `" + argument + "`: " + option, Modal.ERROR);
       if (DEBUG)
-        printThrowable(exception);
+        QEdit.this.printException(exception);
     }
     return EXIT_FAILURE;
   }
 
   private int read() {
+    String path = this.arguments.getLast();
     try {
-      this.sheet = CueSheets.parse(new File(this.arguments.getLast()));
-    } catch (Throwable throwable) {
-      printThrowable("CueSheetParser threw", throwable);
-      return EXIT_FAILURE;
+      this.sheet = CueSheets.parse(new File(path));
+      return EXIT_SUCCESS;
+    } catch (AccessDeniedException exception) {
+      this.modal.println(path + ": Access denied.", Modal.ERROR);
+    } catch (NoSuchFileException exception) {
+      this.modal.println(path + ": Not found.", Modal.ERROR);
+    } catch (Exception exception) {
+      printException("The cuesheet parser threw", exception);
     }
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
   }
 
   private int act() {
     for (CueSheetAction action : this.actions)
       try {
       if (!action.run(this.sheet)) {
-        this.modal.println(
-            "`" + action.toString() + "` returned failure.", Modal.ERROR);
+        this.modal.println("`" + action.toString() + "` failed.", Modal.ERROR);
         return EXIT_FAILURE;
       }
-    } catch (Throwable throwable) {
-      printThrowable("`" + action.toString() + "` threw", throwable);
+    } catch (Exception exception) {
+      printException("`" + action.toString() + "` threw", exception);
       return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
