@@ -42,6 +42,6 @@ public class ShiftTimes implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public String toString() {
-    return KEY + SPACE + offset;
+    return KEY + SPACE + this.offset;
   }
 }

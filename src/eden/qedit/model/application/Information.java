@@ -14,13 +14,13 @@ public final class Information {
   public static final String NAME = "QEdit";
 
   /** Application version. */
-  public static final String VER = "devJ";
+  public static final String VER = "devK";
 
   /** Application version, long version. */
-  public static final String VERSION = "Development J";
+  public static final String VERSION = "Development K";
 
   /** Application release date. */
-  public static final String DATE = "12/19/2021";
+  public static final String DATE = "03/12/2022";
 
   /** Application description. */
   public static final String DESCRIPTION

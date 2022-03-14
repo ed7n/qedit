@@ -28,6 +28,11 @@ import eden.qedit.action.NoTitle;
 import eden.qedit.action.PregapToIndex;
 import eden.qedit.action.Print;
 import eden.qedit.action.SetEOL;
+import eden.qedit.action.SetPerformer;
+import eden.qedit.action.SetPostgap;
+import eden.qedit.action.SetPregap;
+import eden.qedit.action.SetSongwriter;
+import eden.qedit.action.SetTitle;
 import eden.qedit.action.ShiftTimes;
 import eden.qedit.action.SwapAuthors;
 import eden.qedit.action.Write;
@@ -155,34 +160,34 @@ public class QEdit {
           action = new Check();
         else if (argument.equalsIgnoreCase(IndexToPregap.KEY))
           action = new IndexToPregap();
-        else if (argument.equalsIgnoreCase(NoCatalog.KEY))
-          action = new NoCatalog();
         else if (argument.equalsIgnoreCase(NoCDText.KEY))
           action = new NoCDText();
+        else if (argument.equalsIgnoreCase(NoCatalog.KEY))
+          action = new NoCatalog();
         else if (argument.equalsIgnoreCase(NoISRC.KEY))
           action = new NoISRC();
         else if (argument.equalsIgnoreCase(NoPerformer.KEY))
           action = new NoPerformer(CueSheetAction.Mode.ALL);
+        else if (argument.equalsIgnoreCase(NoPerformer.KEY_SESSION))
+          action = new NoPerformer(CueSheetAction.Mode.SESSION);
+        else if (argument.equalsIgnoreCase(NoPerformer.KEY_TRACK))
+          action = new NoPerformer(CueSheetAction.Mode.TRACK);
         else if (argument.equalsIgnoreCase(NoPostgap.KEY))
           action = new NoPostgap();
         else if (argument.equalsIgnoreCase(NoPregap.KEY))
           action = new NoPregap();
         else if (argument.equalsIgnoreCase(NoRem.KEY))
           action = new NoRem();
-        else if (argument.equalsIgnoreCase(NoPerformer.KEY_SESSION))
-          action = new NoPerformer(CueSheetAction.Mode.SESSION);
-        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_SESSION))
-          action = new NoSongwriter(CueSheetAction.Mode.SESSION);
-        else if (argument.equalsIgnoreCase(NoTitle.KEY_SESSION))
-          action = new NoTitle(CueSheetAction.Mode.SESSION);
         else if (argument.equalsIgnoreCase(NoSongwriter.KEY))
           action = new NoSongwriter(CueSheetAction.Mode.ALL);
-        else if (argument.equalsIgnoreCase(NoTitle.KEY))
-          action = new NoTitle(CueSheetAction.Mode.ALL);
-        else if (argument.equalsIgnoreCase(NoPerformer.KEY_TRACK))
-          action = new NoPerformer(CueSheetAction.Mode.TRACK);
+        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_SESSION))
+          action = new NoSongwriter(CueSheetAction.Mode.SESSION);
         else if (argument.equalsIgnoreCase(NoSongwriter.KEY_TRACK))
           action = new NoSongwriter(CueSheetAction.Mode.TRACK);
+        else if (argument.equalsIgnoreCase(NoTitle.KEY))
+          action = new NoTitle(CueSheetAction.Mode.ALL);
+        else if (argument.equalsIgnoreCase(NoTitle.KEY_SESSION))
+          action = new NoTitle(CueSheetAction.Mode.SESSION);
         else if (argument.equalsIgnoreCase(NoTitle.KEY_TRACK))
           action = new NoTitle(CueSheetAction.Mode.TRACK);
         else if (argument.equalsIgnoreCase(PregapToIndex.KEY))
@@ -192,6 +197,39 @@ public class QEdit {
         else if (argument.equalsIgnoreCase(SetEOL.KEY)) {
           option = this.arguments.removeFirst();
           action = new SetEOL(LineEnding.parseName(option));
+        } else if (argument.equalsIgnoreCase(SetPerformer.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.ALL, option);
+        } else if (argument.equalsIgnoreCase(SetPerformer.KEY_SESSION)) {
+          option = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.SESSION, option);
+        } else if (argument.equalsIgnoreCase(SetPerformer.KEY_TRACK)) {
+          option = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.TRACK, option);
+        } else if (argument.equalsIgnoreCase(SetPostgap.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetPostgap(Integer.parseInt(option));
+        } else if (argument.equalsIgnoreCase(SetPregap.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetPregap(Integer.parseInt(option));
+        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.ALL, option);
+        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY_SESSION)) {
+          option = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.SESSION, option);
+        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY_TRACK)) {
+          option = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.TRACK, option);
+        } else if (argument.equalsIgnoreCase(SetTitle.KEY)) {
+          option = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.ALL, option);
+        } else if (argument.equalsIgnoreCase(SetTitle.KEY_SESSION)) {
+          option = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.SESSION, option);
+        } else if (argument.equalsIgnoreCase(SetTitle.KEY_TRACK)) {
+          option = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.TRACK, option);
         } else if (argument.equalsIgnoreCase(ShiftTimes.KEY)) {
           option = this.arguments.removeFirst();
           action = new ShiftTimes(Integer.parseInt(option));

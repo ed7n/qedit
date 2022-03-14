@@ -2,6 +2,20 @@ QEdit: Changes
 
 —
 
+——Development K, 03/02/2022.
+- Fixed printing a pregap-less track postgap.
+- Actions:
+  - set-performer
+  - set-postgap
+  - set-pregap
+  - set-session-performer
+  - set-session-songwriter
+  - set-session-title
+  - set-songwriter
+  - set-track-performer
+  - set-track-songwriter
+  - set-title
+
 ——Development J, 12/19/2021.
 - Fixed misparsing of line ending.
 
