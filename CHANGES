@@ -2,6 +2,9 @@ QEdit: Changes
 
 —
 
+——Development L, 05/26/2022.
+- Fixed application landing URL.
+
 ——Development K, 03/02/2022.
 - Fixed printing a pregap-less track postgap.
 - Actions:
