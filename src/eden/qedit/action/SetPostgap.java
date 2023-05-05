@@ -14,7 +14,6 @@ public class SetPostgap implements CueSheetAction {
 
   /** Key. */
   public static final String KEY = "set-postgap";
-
   /** New postgap in frames. */
   private final int postgap;
 

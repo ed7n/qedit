@@ -13,16 +13,12 @@ public class SetSongwriter implements CueSheetAction {
 
   /** Key: all. */
   public static final String KEY = "set-songwriter";
-
   /** Key: session. */
   public static final String KEY_SESSION = "set-session-songwriter";
-
   /** Key: track. */
   public static final String KEY_TRACK = "set-track-songwriter";
-
   /** Operation mode. */
   private final Mode mode;
-
   /** New songwriter. */
   private final String songwriter;
 
@@ -35,11 +31,15 @@ public class SetSongwriter implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    if (this.mode != Mode.TRACK)
+    if (this.mode != Mode.TRACK) {
       sheet.getSession().setSongwriter(this.songwriter);
-    if (this.mode != Mode.SESSION)
-      sheet.getSession().getTracks().forEach(
-          track -> track.setSongwriter(this.songwriter));
+    }
+    if (this.mode != Mode.SESSION) {
+      sheet
+        .getSession()
+        .getTracks()
+        .forEach(track -> track.setSongwriter(this.songwriter));
+    }
     return true;
   }
 

@@ -9,7 +9,6 @@ import eden.common.model.cd.CueSheet;
  * @see eden.common.model.cd.CueSheet
  */
 public interface CueSheetAction {
-
   /** Runs its operation on the given cuesheet and returns its success. */
   boolean run(CueSheet sheet) throws Exception;
 
@@ -19,6 +18,8 @@ public interface CueSheetAction {
 
   /** Operation modes. */
   public enum Mode {
-    ALL, TRACK, SESSION;
+    ALL,
+    TRACK,
+    SESSION,
   }
 }

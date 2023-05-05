@@ -2,7 +2,6 @@ package eden.qedit.action;
 
 import eden.common.model.cd.CueSheet;
 import eden.common.util.CueSheets;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -17,7 +16,6 @@ public class Write implements CueSheetAction {
 
   /** Key. */
   public static final String KEY = "write";
-
   /** Output path. */
   private final Path path;
 

@@ -34,41 +34,44 @@ public class Check implements CueSheetAction {
     List<Exception> exceptions = new LinkedList<>();
     Index lastIndex = null;
     Path path;
-    String directory = sheet.getFile().getFile().getParent(),
-        file;
+    String directory = sheet.getFile().getFile().getParent(), file;
     exceptions.addAll(CueSheets.checkSyntax(sheet.getSession()));
     if (sheet.getSession().hasCdTextFile()) {
       file = sheet.getSession().getCdTextFile();
       path = Paths.get(directory + File.separator + file);
-      if (Files.notExists(path))
+      if (Files.notExists(path)) {
         exceptions.add(new FileAbsentException(file));
-      else if (Files.isDirectory(path))
+      } else if (Files.isDirectory(path)) {
         exceptions.add(new FileDirectoryException(file));
+      }
     }
     exceptions.addAll(CueSheets.checkSyntaxTrack(sheet.getSession()));
     for (Track track : sheet.getTracks()) {
       exceptions.addAll(CueSheets.checkSyntax(track, lastIndex));
       if (track.hasIndexes()) {
-        for (Index index : track.getIndexes())
+        for (Index index : track.getIndexes()) {
           if (index.hasFile()) {
             file = index.getFilePath();
             path = Paths.get(directory + File.separator + file);
-            if (Files.notExists(path))
+            if (Files.notExists(path)) {
               exceptions.add(new FileAbsentException(file));
-            else if (Files.isDirectory(path))
+            } else if (Files.isDirectory(path)) {
               exceptions.add(new FileDirectoryException(file));
+            }
           }
+        }
         lastIndex = track.getLastIndex();
       }
     }
     exceptions.forEach(exception -> {
       STDOUT.println(exception.getMessage());
-      if (exception instanceof EDENRuntimeException)
+      if (exception instanceof EDENRuntimeException) {
         STDOUT.println(
-            SPACE + SPACE + ((EDENRuntimeException) exception).getRemedy());
-      else if (exception instanceof EDENException)
-        STDOUT.println(
-            SPACE + SPACE + ((EDENException) exception).getRemedy());
+          SPACE + SPACE + ((EDENRuntimeException) exception).getRemedy()
+        );
+      } else if (exception instanceof EDENException) {
+        STDOUT.println(SPACE + SPACE + ((EDENException) exception).getRemedy());
+      }
     });
     return true;
   }

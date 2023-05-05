@@ -15,7 +15,6 @@ public class SetEOL implements CueSheetAction {
 
   /** Key. */
   public static final String KEY = "set-eol";
-
   /** Line ending. */
   private final LineEnding lineEnding;
 

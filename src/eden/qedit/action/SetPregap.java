@@ -14,7 +14,6 @@ public class SetPregap implements CueSheetAction {
 
   /** Key. */
   public static final String KEY = "set-pregap";
-
   /** New pregap in frames. */
   private final int pregap;
 

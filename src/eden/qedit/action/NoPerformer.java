@@ -11,13 +11,10 @@ public class NoPerformer implements CueSheetAction {
 
   /** Key: all. */
   public static final String KEY = "no-performer";
-
   /** Key: session. */
   public static final String KEY_SESSION = "no-session-performer";
-
   /** Key: track. */
   public static final String KEY_TRACK = "no-track-performer";
-
   /** Operation mode. */
   private final Mode mode;
 
@@ -29,10 +26,12 @@ public class NoPerformer implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    if (mode != Mode.TRACK)
+    if (mode != Mode.TRACK) {
       sheet.getSession().unsetPerformer();
-    if (mode != Mode.SESSION)
+    }
+    if (mode != Mode.SESSION) {
       sheet.getSession().getTracks().forEach(track -> track.unsetPerformer());
+    }
     return true;
   }
 

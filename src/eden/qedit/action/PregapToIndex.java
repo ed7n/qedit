@@ -23,37 +23,42 @@ public class PregapToIndex implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    sheet.getTracks().forEach(track -> {
-      if (track.hasPregap() && track.hasIndexes()) {
-        int frame = track.getIndex(0).getFrame() - track.getPregap();
-        switch (track.getIndex(0).getNumber()) {
-          case Index.MIN_NUMBER:
-            if (frame == 0)
-              return;
-            if (frame < 0) {
-              track.getIndex(0).setFrame(Index.MIN_FRAME);
-              track.setPregap(-frame);
-            } else {
-              track.getIndex(0).setFrame(frame);
-              track.unsetPregap();
-            }
-            break;
-          case Index.MIN_NUMBER + 1:
-            if (frame > 0) {
-              track.getIndexes().add(
-                  Index.MIN_NUMBER, new Index(Index.MIN_FRAME, frame));
-              track.getIndex(0).setFile(
-                  track.getIndex(1).getFilePath(),
-                  track.getIndex(1).getFileType());
-              track.getIndex(1).unsetFile();
-              track.unsetPregap();
-            }
-            break;
-          default:
-            return;
+    sheet
+      .getTracks()
+      .forEach(track -> {
+        if (track.hasPregap() && track.hasIndexes()) {
+          int frame = track.getIndex(0).getFrame() - track.getPregap();
+          switch (track.getIndex(0).getNumber()) {
+            case Index.MIN_NUMBER:
+              if (frame == 0) {
+                return;
+              }
+              if (frame < 0) {
+                track.getIndex(0).setFrame(Index.MIN_FRAME);
+                track.setPregap(-frame);
+              } else {
+                track.getIndex(0).setFrame(frame);
+                track.unsetPregap();
+              }
+              break;
+            case Index.MIN_NUMBER + 1:
+              if (frame > 0) {
+                track
+                  .getIndexes()
+                  .add(Index.MIN_NUMBER, new Index(Index.MIN_FRAME, frame));
+                track
+                  .getIndex(0)
+                  .setFile(
+                    track.getIndex(1).getFilePath(),
+                    track.getIndex(1).getFileType()
+                  );
+                track.getIndex(1).unsetFile();
+                track.unsetPregap();
+              }
+              break;
+          }
         }
-      }
-    });
+      });
     return true;
   }
 

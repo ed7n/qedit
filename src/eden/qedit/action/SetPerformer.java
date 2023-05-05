@@ -13,16 +13,12 @@ public class SetPerformer implements CueSheetAction {
 
   /** Key: all. */
   public static final String KEY = "set-performer";
-
   /** Key: session. */
   public static final String KEY_SESSION = "set-session-performer";
-
   /** Key: track. */
   public static final String KEY_TRACK = "set-track-performer";
-
   /** Operation mode. */
   private final CueSheetAction.Mode mode;
-
   /** New performer. */
   private final String performer;
 
@@ -35,11 +31,15 @@ public class SetPerformer implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    if (this.mode != CueSheetAction.Mode.TRACK)
+    if (this.mode != CueSheetAction.Mode.TRACK) {
       sheet.getSession().setPerformer(this.performer);
-    if (this.mode != CueSheetAction.Mode.SESSION)
-      sheet.getSession().getTracks().forEach(
-          track -> track.setPerformer(this.performer));
+    }
+    if (this.mode != CueSheetAction.Mode.SESSION) {
+      sheet
+        .getSession()
+        .getTracks()
+        .forEach(track -> track.setPerformer(this.performer));
+    }
     return true;
   }
 

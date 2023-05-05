@@ -14,7 +14,6 @@ public class ShiftTimes implements CueSheetAction {
 
   /** Key. */
   public static final String KEY = "shift-times";
-
   /** Frame offset. */
   private int offset;
 
@@ -26,16 +25,24 @@ public class ShiftTimes implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    if (this.offset == 0
-        && sheet.getSession().hasTracks()
-        && sheet.getSession().getTrack(0).hasIndexes())
+    if (
+      this.offset == 0 &&
+      sheet.getSession().hasTracks() &&
+      sheet.getSession().getTrack(0).hasIndexes()
+    ) {
       this.offset = -sheet.getTrack(0).getIndex(0).getFrame();
-    sheet.getTracks().forEach(track -> {
-      track.getIndexes().forEach(index -> {
-        index.setFrame(Math.max(
-            Index.MIN_FRAME, index.getFrame() + this.offset));
+    }
+    sheet
+      .getTracks()
+      .forEach(track -> {
+        track
+          .getIndexes()
+          .forEach(index -> {
+            index.setFrame(
+              Math.max(Index.MIN_FRAME, index.getFrame() + this.offset)
+            );
+          });
       });
-    });
     return true;
   }
 

@@ -2,6 +2,13 @@ QEdit: Changes
 
 —
 
+——Development M, 05/05/2023.
+- Fixed code inspection warnings where sensible.
+  - NetBeans 17.
+- Formatted code with Prettier.
+- Require output file.
+- Updated code and presentation styles where sensible.
+
 ——Development L, 05/26/2022.
 - Fixed application landing URL.
 

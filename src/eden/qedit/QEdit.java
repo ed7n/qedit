@@ -59,33 +59,31 @@ public class QEdit {
 
   /** Whether to print stack traces of caught exceptions. */
   public static final boolean DEBUG = false;
-
-  private static final Pattern HELP
-      = Pattern.compile("^(-){1,2}[Hh]([Ee][Ll][Pp])?$");
+  private static final Pattern HELP = Pattern.compile(
+    "^(-){1,2}[Hh]([Ee][Ll][Pp])?$"
+  );
 
   /**
    * The main method is the entry point to this application.
    *
-   * @param args Command-line arguments to be passed on execution.
+   * @param arguments Command-line arguments to be passed on execution.
    */
-  public static void main(String[] args) {
-    System.exit(new QEdit(args).run());
+  public static void main(String[] arguments) {
+    System.exit(new QEdit(arguments).run());
   }
 
   /** Program modal. */
   private final Modal modal = new Modal(Information.NAME);
-
   /** Program arguments. */
   private final Deque<String> arguments;
-
   /** Actions. */
   private final List<CueSheetAction> actions = new LinkedList<>();
-
   /** Working cuesheet. */
   private CueSheet sheet;
-
   /** Operation mode. */
   private Mode mode = Mode.PARSE;
+  /** Whether there it has an output file to write to. */
+  private boolean hasOutput = false;
 
   /** Makes an instance with the given arguments. */
   private QEdit(String[] args) {
@@ -94,34 +92,35 @@ public class QEdit {
 
   /** Runs itself. */
   private int run() {
-    int exitCode = NUL_INT;
-    do
+    int out = NUL_INT;
+    do {
       switch (this.mode) {
         case PARSE:
-          exitCode = parse();
-          if (exitCode == hashCode())
-            return EXIT_SUCCESS;
+          out = parse();
           this.mode = Mode.READ;
           break;
         case READ:
-          exitCode = read();
+          out = read();
           this.mode = Mode.ACT;
           break;
         case ACT:
-          exitCode = act();
+          out = act();
           this.mode = Mode.DONE;
           break;
         case DONE:
-          return exitCode;
+          return out == hashCode() ? EXIT_SUCCESS : out;
       }
-    while (exitCode == EXIT_SUCCESS);
-    return exitCode;
+      if (out != EXIT_SUCCESS) {
+        this.mode = Mode.DONE;
+      }
+    } while (true);
   }
 
   /** Prints its help message. */
   private int help() {
     STDOUT.println(
-        Information.getHeader() + EOL + Help.USAGE + EOL + Help.EXPLANATION);
+      Information.getHeader() + EOL + Help.USAGE + EOL + Help.EXPLANATION
+    );
     return hashCode();
   }
 
@@ -134,141 +133,169 @@ public class QEdit {
    * Prints the stack trace of the given exception headered by the given header.
    */
   private void printException(String header, Exception exception) {
-    if (!Strings.isNullOrEmpty(header))
-      this.modal.print(header + ":\n  ", Modal.ERROR);
+    if (exception == null) {
+      return;
+    }
+    if (!Strings.isNullOrEmpty(header)) {
+      this.modal.print(header + ":" + EOL + "  ", Modal.ERROR);
+    }
     if (exception instanceof EDENRuntimeException) {
       this.modal.println(exception.getMessage(), Modal.ERROR);
       this.modal.println(((EDENRuntimeException) exception).getRemedy());
     } else if (exception instanceof EDENException) {
       this.modal.println(exception.getMessage(), Modal.ERROR);
       this.modal.println(((EDENException) exception).getRemedy());
-    } else
+    } else {
       this.modal.println(exception.toString(), Modal.ERROR);
-    if (DEBUG)
+    }
+    if (DEBUG) {
       exception.printStackTrace(this.modal.getPrintStream());
+    }
   }
 
   private int parse() {
-    if (this.arguments.isEmpty())
-      return help();
+    if (this.arguments.isEmpty()) {
+      STDOUT.println(
+        Information.getHeader() +
+        EOL +
+        Help.USAGE +
+        EOL +
+        "`--help` for more information."
+      );
+      return hashCode();
+    }
     CueSheetAction action;
-    String argument = null, option = null;
+    String argument = null;
+    String option = null;
     try {
       while (this.arguments.size() > 1) {
-        argument = this.arguments.removeFirst();
-        if (argument.equalsIgnoreCase(Check.KEY))
+        option = this.arguments.removeFirst();
+        if (option.equalsIgnoreCase(Check.KEY)) {
           action = new Check();
-        else if (argument.equalsIgnoreCase(IndexToPregap.KEY))
+        } else if (option.equalsIgnoreCase(IndexToPregap.KEY)) {
           action = new IndexToPregap();
-        else if (argument.equalsIgnoreCase(NoCDText.KEY))
+        } else if (option.equalsIgnoreCase(NoCDText.KEY)) {
           action = new NoCDText();
-        else if (argument.equalsIgnoreCase(NoCatalog.KEY))
+        } else if (option.equalsIgnoreCase(NoCatalog.KEY)) {
           action = new NoCatalog();
-        else if (argument.equalsIgnoreCase(NoISRC.KEY))
+        } else if (option.equalsIgnoreCase(NoISRC.KEY)) {
           action = new NoISRC();
-        else if (argument.equalsIgnoreCase(NoPerformer.KEY))
+        } else if (option.equalsIgnoreCase(NoPerformer.KEY)) {
           action = new NoPerformer(CueSheetAction.Mode.ALL);
-        else if (argument.equalsIgnoreCase(NoPerformer.KEY_SESSION))
+        } else if (option.equalsIgnoreCase(NoPerformer.KEY_SESSION)) {
           action = new NoPerformer(CueSheetAction.Mode.SESSION);
-        else if (argument.equalsIgnoreCase(NoPerformer.KEY_TRACK))
+        } else if (option.equalsIgnoreCase(NoPerformer.KEY_TRACK)) {
           action = new NoPerformer(CueSheetAction.Mode.TRACK);
-        else if (argument.equalsIgnoreCase(NoPostgap.KEY))
+        } else if (option.equalsIgnoreCase(NoPostgap.KEY)) {
           action = new NoPostgap();
-        else if (argument.equalsIgnoreCase(NoPregap.KEY))
+        } else if (option.equalsIgnoreCase(NoPregap.KEY)) {
           action = new NoPregap();
-        else if (argument.equalsIgnoreCase(NoRem.KEY))
+        } else if (option.equalsIgnoreCase(NoRem.KEY)) {
           action = new NoRem();
-        else if (argument.equalsIgnoreCase(NoSongwriter.KEY))
+        } else if (option.equalsIgnoreCase(NoSongwriter.KEY)) {
           action = new NoSongwriter(CueSheetAction.Mode.ALL);
-        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_SESSION))
+        } else if (option.equalsIgnoreCase(NoSongwriter.KEY_SESSION)) {
           action = new NoSongwriter(CueSheetAction.Mode.SESSION);
-        else if (argument.equalsIgnoreCase(NoSongwriter.KEY_TRACK))
+        } else if (option.equalsIgnoreCase(NoSongwriter.KEY_TRACK)) {
           action = new NoSongwriter(CueSheetAction.Mode.TRACK);
-        else if (argument.equalsIgnoreCase(NoTitle.KEY))
+        } else if (option.equalsIgnoreCase(NoTitle.KEY)) {
           action = new NoTitle(CueSheetAction.Mode.ALL);
-        else if (argument.equalsIgnoreCase(NoTitle.KEY_SESSION))
+        } else if (option.equalsIgnoreCase(NoTitle.KEY_SESSION)) {
           action = new NoTitle(CueSheetAction.Mode.SESSION);
-        else if (argument.equalsIgnoreCase(NoTitle.KEY_TRACK))
+        } else if (option.equalsIgnoreCase(NoTitle.KEY_TRACK)) {
           action = new NoTitle(CueSheetAction.Mode.TRACK);
-        else if (argument.equalsIgnoreCase(PregapToIndex.KEY))
+        } else if (option.equalsIgnoreCase(PregapToIndex.KEY)) {
           action = new PregapToIndex();
-        else if (argument.equalsIgnoreCase(Print.KEY))
+        } else if (option.equalsIgnoreCase(Print.KEY)) {
           action = new Print();
-        else if (argument.equalsIgnoreCase(SetEOL.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetEOL(LineEnding.parseName(option));
-        } else if (argument.equalsIgnoreCase(SetPerformer.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetPerformer(CueSheetAction.Mode.ALL, option);
-        } else if (argument.equalsIgnoreCase(SetPerformer.KEY_SESSION)) {
-          option = this.arguments.removeFirst();
-          action = new SetPerformer(CueSheetAction.Mode.SESSION, option);
-        } else if (argument.equalsIgnoreCase(SetPerformer.KEY_TRACK)) {
-          option = this.arguments.removeFirst();
-          action = new SetPerformer(CueSheetAction.Mode.TRACK, option);
-        } else if (argument.equalsIgnoreCase(SetPostgap.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetPostgap(Integer.parseInt(option));
-        } else if (argument.equalsIgnoreCase(SetPregap.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetPregap(Integer.parseInt(option));
-        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetSongwriter(CueSheetAction.Mode.ALL, option);
-        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY_SESSION)) {
-          option = this.arguments.removeFirst();
-          action = new SetSongwriter(CueSheetAction.Mode.SESSION, option);
-        } else if (argument.equalsIgnoreCase(SetSongwriter.KEY_TRACK)) {
-          option = this.arguments.removeFirst();
-          action = new SetSongwriter(CueSheetAction.Mode.TRACK, option);
-        } else if (argument.equalsIgnoreCase(SetTitle.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new SetTitle(CueSheetAction.Mode.ALL, option);
-        } else if (argument.equalsIgnoreCase(SetTitle.KEY_SESSION)) {
-          option = this.arguments.removeFirst();
-          action = new SetTitle(CueSheetAction.Mode.SESSION, option);
-        } else if (argument.equalsIgnoreCase(SetTitle.KEY_TRACK)) {
-          option = this.arguments.removeFirst();
-          action = new SetTitle(CueSheetAction.Mode.TRACK, option);
-        } else if (argument.equalsIgnoreCase(ShiftTimes.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new ShiftTimes(Integer.parseInt(option));
-        } else if (argument.equalsIgnoreCase(SwapAuthors.KEY))
+          this.hasOutput = true;
+        } else if (option.equalsIgnoreCase(SetEOL.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetEOL(LineEnding.parseName(argument));
+        } else if (option.equalsIgnoreCase(SetPerformer.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.ALL, argument);
+        } else if (option.equalsIgnoreCase(SetPerformer.KEY_SESSION)) {
+          argument = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.SESSION, argument);
+        } else if (option.equalsIgnoreCase(SetPerformer.KEY_TRACK)) {
+          argument = this.arguments.removeFirst();
+          action = new SetPerformer(CueSheetAction.Mode.TRACK, argument);
+        } else if (option.equalsIgnoreCase(SetPostgap.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetPostgap(Integer.parseInt(argument));
+        } else if (option.equalsIgnoreCase(SetPregap.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetPregap(Integer.parseInt(argument));
+        } else if (option.equalsIgnoreCase(SetSongwriter.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.ALL, argument);
+        } else if (option.equalsIgnoreCase(SetSongwriter.KEY_SESSION)) {
+          argument = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.SESSION, argument);
+        } else if (option.equalsIgnoreCase(SetSongwriter.KEY_TRACK)) {
+          argument = this.arguments.removeFirst();
+          action = new SetSongwriter(CueSheetAction.Mode.TRACK, argument);
+        } else if (option.equalsIgnoreCase(SetTitle.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.ALL, argument);
+        } else if (option.equalsIgnoreCase(SetTitle.KEY_SESSION)) {
+          argument = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.SESSION, argument);
+        } else if (option.equalsIgnoreCase(SetTitle.KEY_TRACK)) {
+          argument = this.arguments.removeFirst();
+          action = new SetTitle(CueSheetAction.Mode.TRACK, argument);
+        } else if (option.equalsIgnoreCase(ShiftTimes.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new ShiftTimes(Integer.parseInt(argument));
+        } else if (option.equalsIgnoreCase(SwapAuthors.KEY)) {
           action = new SwapAuthors();
-        else if (argument.equalsIgnoreCase(Write.KEY)) {
-          option = this.arguments.removeFirst();
-          action = new Write(Paths.get(option));
-        } else if (HELP.matcher(argument).matches())
+        } else if (option.equalsIgnoreCase(Write.KEY)) {
+          argument = this.arguments.removeFirst();
+          action = new Write(Paths.get(argument));
+          this.hasOutput = true;
+        } else if (HELP.matcher(option).matches()) {
           return help();
-        else if (argument.equalsIgnoreCase("--"))
+        } else if (option.equalsIgnoreCase("--")) {
           break;
-        else {
-          this.modal.println("Invalid action: " + argument, Modal.ERROR);
+        } else {
+          this.modal.println("Invalid action: " + option, Modal.ERROR);
           return EXIT_FAILURE;
         }
         this.actions.add(action);
       }
-      if (this.arguments.isEmpty()) {
-        this.modal.println("No input file.", Modal.ERROR);
-        return EXIT_FAILURE;
-      }
       return HELP.matcher(this.arguments.getFirst()).matches()
-          ? help() : EXIT_SUCCESS;
+        ? help()
+        : EXIT_SUCCESS;
     } catch (NoSuchElementException exception) {
       this.modal.println(
-          "Insufficient options for `" + argument + "`.", Modal.ERROR);
-      if (DEBUG)
-        QEdit.this.printException(exception);
+          "Insufficient arguments for `" + option + "`.",
+          Modal.ERROR
+        );
+      if (DEBUG) {
+        printException(exception);
+      }
     } catch (IllegalArgumentException | NullPointerException exception) {
       this.modal.println(
-          "Invalid option for `" + argument + "`: " + option, Modal.ERROR);
-      if (DEBUG)
-        QEdit.this.printException(exception);
+          "Invalid `" + option + "` argument `" + argument + "`.",
+          Modal.ERROR
+        );
+      if (DEBUG) {
+        printException(exception);
+      }
     }
     return EXIT_FAILURE;
   }
 
   private int read() {
+    if (this.arguments.isEmpty()) {
+      this.modal.println("No input file.", Modal.ERROR);
+      return EXIT_FAILURE;
+    }
+    if (!this.hasOutput) {
+      this.modal.println("No output file.", Modal.ERROR);
+      return EXIT_FAILURE;
+    }
     String path = this.arguments.getLast();
     try {
       this.sheet = CueSheets.parse(new File(path));
@@ -284,8 +311,7 @@ public class QEdit {
   }
 
   private int act() {
-    for (CueSheetAction action : this.actions)
-      try {
+    for (CueSheetAction action : this.actions) try {
       if (!action.run(this.sheet)) {
         this.modal.println("`" + action.toString() + "` failed.", Modal.ERROR);
         return EXIT_FAILURE;
@@ -299,6 +325,9 @@ public class QEdit {
 
   /** Operation modes. */
   private enum Mode {
-    PARSE, READ, ACT, DONE;
+    PARSE,
+    READ,
+    ACT,
+    DONE,
   }
 }

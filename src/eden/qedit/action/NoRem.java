@@ -15,10 +15,12 @@ public class NoRem implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    sheet.getTracks().forEach(track -> {
-      track.getIndexes().forEach(index -> index.getRems().clear());
-      track.getRems().clear();
-    });
+    sheet
+      .getTracks()
+      .forEach(track -> {
+        track.getIndexes().forEach(index -> index.getRems().clear());
+        track.getRems().clear();
+      });
     sheet.getSession().getRems().clear();
     return true;
   }

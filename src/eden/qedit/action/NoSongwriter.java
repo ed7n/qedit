@@ -11,13 +11,10 @@ public class NoSongwriter implements CueSheetAction {
 
   /** Key: all. */
   public static final String KEY = "no-songwriter";
-
   /** Key: session. */
   public static final String KEY_SESSION = "no-session-songwriter";
-
   /** Key: track. */
   public static final String KEY_TRACK = "no-track-songwriter";
-
   /** Operation mode. */
   private final Mode mode;
 
@@ -29,10 +26,12 @@ public class NoSongwriter implements CueSheetAction {
   /** {@inheritDoc} */
   @Override
   public boolean run(CueSheet sheet) {
-    if (this.mode != Mode.TRACK)
+    if (this.mode != Mode.TRACK) {
       sheet.getSession().unsetSongwriter();
-    if (this.mode != Mode.SESSION)
+    }
+    if (this.mode != Mode.SESSION) {
       sheet.getSession().getTracks().forEach(track -> track.unsetSongwriter());
+    }
     return true;
   }
 
